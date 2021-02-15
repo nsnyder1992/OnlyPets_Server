@@ -9,6 +9,9 @@ module.exports = (sequelize, DataTypes) => {
     description: {
       type: DataTypes.STRING,
     },
+    moneyToSubscribe: {
+      type: DataTypes.DECIMAL(10, 2),
+    },
     ownerId: {
       type: DataTypes.INTEGER,
     },
