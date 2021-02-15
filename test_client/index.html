@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Only Pets Client</title>
+</head>
+<body>
+    <button onclick=getPhoto()>Get</button>
+    <form action="http://localhost:3001/post/create" method="post" enctype="multipart/form-data">
+        <input type="file" name="postImage" />
+        <input type="text" name="description"/>
+        <button type="submit" >Submit</button>
+    </form>
+    <img src="" id="test-img">
+    <script>
+        function getPhoto(){
+            const image = document.getElementById('test-img')
+            fetch('http://localhost:3001/post/1')
+                    .then(response => response.json())
+                    .then(json => image.src = `data:${json.photoType};base64, ${json.photo}`)
+                    .catch(err => console.error(err));
+        }
+    </script>
+</body>
+</html>
