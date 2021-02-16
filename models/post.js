@@ -1,10 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const Post = sequelize.define("post", {
-    photo: {
-      type: DataTypes.BLOB("long"),
-      allowNull: false,
-    },
-    photoType: {
+    photoUrl: {
       type: DataTypes.STRING,
       allowNull: false,
     },

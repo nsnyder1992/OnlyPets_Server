@@ -13,26 +13,16 @@ const Post = require("../db").import("../models/post.js");
 // const validateSession = require("../middleware/validate-session");
 
 ////////////////////////////////////////////////
-// TEST POST
-////////////////////////////////////////////////
-router.get("/test", (req, res) => {
-  console.log("test");
-  res.json({ test: true });
-});
-
-////////////////////////////////////////////////
 // CREATE POST
 ////////////////////////////////////////////////
 router.post("/", upload.single("postImage"), (req, res) => {
   const postEntry = {
-    photo: req.file.buffer,
-    photoType: req.file.mimetype,
+    photoUrl: req.url,
     description: req.body.description,
-    likes: 0,
-    petId: 0,
+    likes: req.body.likes || 0,
+    petId: req.body.petId,
   };
 
-  console.log(postEntry);
   Post.create(postEntry)
     .then((post) => res.status(200).json(post))
     .catch((err) => res.status(500).json({ error: err }));
@@ -43,12 +33,7 @@ router.post("/", upload.single("postImage"), (req, res) => {
 ////////////////////////////////////////////////
 router.get("/", (req, res) => {
   Post.findAll()
-    .then((posts) => {
-      posts.map((post) => {
-        post.photo = post.photo.toString("base64");
-      });
-      res.status(200).json(posts);
-    })
+    .then((posts) => res.status(200).json(posts))
     .catch((err) => res.status(500).json({ err }));
 });
 
@@ -57,12 +42,7 @@ router.get("/", (req, res) => {
 ////////////////////////////////////////////////
 router.get("/byPet/:petID", (req, res) => {
   Post.findAll({ where: { petId: req.params.petID } })
-    .then((posts) => {
-      posts.map((post) => {
-        post.photo = post.photo.toString("base64");
-      });
-      res.status(200).json(posts);
-    })
+    .then((posts) => res.status(200).json(posts))
     .catch((err) => res.status(500).json({ err }));
 });
 
@@ -71,10 +51,7 @@ router.get("/byPet/:petID", (req, res) => {
 ////////////////////////////////////////////////
 router.get("/:postID", (req, res) => {
   Post.findOne({ where: { id: req.params.postID } })
-    .then((post) => {
-      post.photo = post.photo.toString("base64");
-      res.status(200).json(post);
-    })
+    .then((post) => res.status(200).json(post))
     .catch((err) => res.status(500).json({ err }));
 });
 
@@ -82,12 +59,11 @@ router.get("/:postID", (req, res) => {
 // UPDATE POST
 ////////////////////////////////////////////////
 router.put("/:postID", upload.single("postImage"), (req, res) => {
+  console.log(req.body);
   const postEntry = {
-    photo: req.file.buffer,
-    photoType: req.file.mimetype,
+    photoUrl: req.body.url,
     description: req.body.description,
-    likes: 0,
-    petId: 0,
+    petId: req.body.petId,
   };
 
   const query = { where: { id: req.params.postID } };
