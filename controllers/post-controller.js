@@ -12,7 +12,7 @@ const Post = require("../db").import("../models/post.js");
 ////////////////////////////////////////////////
 router.post("/", (req, res) => {
   const postEntry = {
-    photoUrl: req.url,
+    photoUrl: req.body.photoUrl,
     description: req.body.description,
     likes: req.body.likes || 0,
     petId: req.body.petId,
@@ -56,7 +56,7 @@ router.get("/:postID", (req, res) => {
 router.put("/:postID", (req, res) => {
   console.log(req.body);
   const postEntry = {
-    photoUrl: req.body.url,
+    photoUrl: req.body.photoUrl,
     description: req.body.description,
     petId: req.body.petId,
   };
