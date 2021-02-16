@@ -7,6 +7,36 @@ const Post = require("../db").import("../models/post.js");
 //validation
 // const validateSession = require("../middleware/validate-session");
 
+//cloudinary
+const cloudinary = require("cloudinary");
+const cloudinaryUrl = `http://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_NAME}/image/upload?api_key=${process.env.CLOUDINARY_API_KEY}`;
+
+////////////////////////////////////////////////
+// CLOUDINARY SIGNATURE
+////////////////////////////////////////////////
+router.get("/cloudinary/:publicId", (req, res) => {
+  let timestamp = Math.round(new Date().getTime() / 1000);
+
+  let params_to_sign = {
+    timestamp: timestamp,
+    folder: "onlyPets",
+    public_id: `id-${timestamp}-${req.params.publicId}`,
+  };
+
+  let sig = cloudinary.utils.api_sign_request(
+    params_to_sign,
+    process.env.CLOUDINARY_API_SECRET
+  );
+
+  res.status(200).json({
+    signature: sig,
+    timestamp: timestamp,
+    folder: "onlyPets",
+    public_id: `id-${timestamp}-${req.params.publicId}`,
+    key: process.env.CLOUDINARY_API_KEY,
+  });
+});
+
 ////////////////////////////////////////////////
 // CREATE POST
 ////////////////////////////////////////////////
