@@ -1,11 +1,6 @@
 // router
 const router = require("express").Router();
 
-//file upload
-const multer = require("multer");
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
 //database
 const Post = require("../db").import("../models/post.js");
 
@@ -15,7 +10,7 @@ const Post = require("../db").import("../models/post.js");
 ////////////////////////////////////////////////
 // CREATE POST
 ////////////////////////////////////////////////
-router.post("/", upload.single("postImage"), (req, res) => {
+router.post("/", (req, res) => {
   const postEntry = {
     photoUrl: req.url,
     description: req.body.description,
@@ -58,7 +53,7 @@ router.get("/:postID", (req, res) => {
 ////////////////////////////////////////////////
 // UPDATE POST
 ////////////////////////////////////////////////
-router.put("/:postID", upload.single("postImage"), (req, res) => {
+router.put("/:postID", (req, res) => {
   console.log(req.body);
   const postEntry = {
     photoUrl: req.body.url,
@@ -76,7 +71,7 @@ router.put("/:postID", upload.single("postImage"), (req, res) => {
 ////////////////////////////////////////////////
 // LIKE POST
 ////////////////////////////////////////////////
-router.put("/like/:postID", upload.single("postImage"), (req, res) => {
+router.put("/like/:postID", (req, res) => {
   const query = { where: { id: req.params.postID } };
   let likes;
 
@@ -97,7 +92,7 @@ router.put("/like/:postID", upload.single("postImage"), (req, res) => {
 ////////////////////////////////////////////////
 // UNLIKE POST
 ////////////////////////////////////////////////
-router.put("/unlike/:postID", upload.single("postImage"), (req, res) => {
+router.put("/unlike/:postID", (req, res) => {
   const query = { where: { id: req.params.postID } };
   let likes;
 
