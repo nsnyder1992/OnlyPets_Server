@@ -2,7 +2,6 @@
 const router = require("express").Router();
 
 //database
-const sequelize = require("../db");
 const Post = require("../db").import("../models/post.js");
 
 //validation
@@ -58,15 +57,23 @@ router.post("/", (req, res) => {
 ////////////////////////////////////////////////
 // GET POSTS
 ////////////////////////////////////////////////
-router.get("/:page/:limit", (req, res) => {
+router.get("/:page/:limit", async (req, res) => {
+  const limit = req.params.limit;
+  const offset = (req.params.page - 1) * limit;
   const query = {
-    limit: req.params.limit,
+    limit: limit,
+    offset: offset,
     order: [["createdAt", "DESC"]],
   };
 
+  const count = await Post.count();
+
   Post.findAll(query)
-    .then((posts) => res.status(200).json(posts))
-    .catch((err) => res.status(500).json({ err }));
+    .then((posts) => {
+      const restRes = { posts: posts, total: count };
+      res.status(200).json(restRes);
+    })
+    .then((err) => res.status(500).json(err));
 });
 
 ////////////////////////////////////////////////
@@ -91,7 +98,7 @@ router.get("/:postID", (req, res) => {
 // UPDATE POST
 ////////////////////////////////////////////////
 router.put("/:postID", (req, res) => {
-  console.log(req.body);
+  console.log(req.params.postID);
   const postEntry = {
     photoUrl: req.body.photoUrl,
     description: req.body.description,
@@ -100,9 +107,8 @@ router.put("/:postID", (req, res) => {
 
   const query = { where: { id: req.params.postID } };
 
-  Post.update(postEntry, query)
-    .then((post) => res.status(200).json(post))
-    .catch((err) => res.status(500).json({ error: err }));
+  Post.update(postEntry, query).then((post) => res.status(200).json(post));
+  // .catch((err) => res.status(500).json({ error: err }));
 });
 
 ////////////////////////////////////////////////
