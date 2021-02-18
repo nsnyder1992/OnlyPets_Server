@@ -2,27 +2,47 @@
 const router = require("express").Router();
 
 //database
-const sequelize = require("../db");
 const Likes = require("../db").import("../models/likes.js");
+
+////////////////////////////////////////////////
+// GET LIKES
+////////////////////////////////////////////////
+router.get("/:postID", async (req, res) => {
+  try {
+    const likes = await Likes.count({ where: { postId: req.params.postID } });
+    const liked = await Likes.findOne({
+      where: { postId: req.params.postID, userId: 1 },
+    });
+
+    res.status(200).json({ numLikes: likes, userLiked: liked ? true : false });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err });
+  }
+});
 
 ////////////////////////////////////////////////
 // LIKE POST
 ////////////////////////////////////////////////
-router.put("/:postID", async (req, res) => {
+router.post("/:postID", async (req, res) => {
   try {
     const createQuery = {
       postId: req.params.postID,
-      userId: 6, //hardcoded for now. req.user.id later
+      userId: 1, //hardcoded for now. req.user.id later
     };
     const isLiked = await Likes.findOne({ where: createQuery });
 
-    if (isLiked) return res.status(200).json({ msg: "Already Liked!" }); // already liked exit function
+    let likes = await Likes.count({ where: { postId: req.params.postID } });
+    if (isLiked)
+      return res
+        .status(200)
+        .json({ numLikes: likes, userLiked: true, msg: "Already Liked" }); // already liked exit function
 
     await Likes.create(createQuery);
 
-    const likes = await Likes.count({ where: { postId: req.params.postID } });
+    likes = await Likes.count({ where: { postId: req.params.postID } });
 
-    res.status(200).json({ numLikes: likes });
+    res.status(200).json({ numLikes: likes, userLiked: true });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: err });
@@ -40,13 +60,17 @@ router.delete("/:postID", async (req, res) => {
     };
     const isLiked = await Likes.findOne({ where: deleteQuery });
 
-    if (!isLiked) return res.status(200).json({ msg: 'Already "NOT" Liked!' }); // already liked exit function
+    let likes = await Likes.count({ where: { postId: req.params.postID } });
+    if (!isLiked)
+      return res
+        .status(200)
+        .json({ numLikes: likes, userLiked: false, msg: "Already NOT Liked" }); // already NOT liked exit function
 
     await Likes.destroy({ where: deleteQuery });
 
-    const likes = await Likes.count({ where: { postId: req.params.postID } });
+    likes = await Likes.count({ where: { postId: req.params.postID } });
 
-    res.status(200).json({ numLikes: likes });
+    res.status(200).json({ numLikes: likes, userLiked: false });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: err });
