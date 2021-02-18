@@ -13,6 +13,7 @@ sequelize.sync();
 const user = require("./controllers/user-controller");
 const pet = require("./controllers/pet-controller");
 const post = require("./controllers/post-controller");
+const like = require("./controllers/like-controller");
 
 //headers
 app.use(require("./middleware/headers"));
@@ -38,6 +39,7 @@ app.use("/user", user);
 ////////////////////////////////////////////////
 app.use("/pet", pet);
 app.use("/post", post);
+app.use("/like", like);
 
 //app constants
 const port = 3001;

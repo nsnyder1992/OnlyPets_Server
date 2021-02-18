@@ -3,6 +3,7 @@ const router = require("express").Router();
 
 //database
 const Post = require("../db").import("../models/post.js");
+const Likes = require("../db").import("../models/likes.js");
 
 //validation
 // const validateSession = require("../middleware/validate-session");
@@ -109,48 +110,6 @@ router.put("/:postID", (req, res) => {
 
   Post.update(postEntry, query).then((post) => res.status(200).json(post));
   // .catch((err) => res.status(500).json({ error: err }));
-});
-
-////////////////////////////////////////////////
-// LIKE POST
-////////////////////////////////////////////////
-router.put("/like/:postID", (req, res) => {
-  const query = { where: { id: req.params.postID } };
-  let likes;
-
-  Post.findOne(query)
-    .then((post) => {
-      likes = post.likes + 1;
-      const postEntry = {
-        likes: likes,
-      };
-
-      Post.update(postEntry, query)
-        .then((post) => res.status(200).json(post))
-        .catch((err) => res.status(500).json({ error: err }));
-    })
-    .catch((err) => res.status(500).json({ err }));
-});
-
-////////////////////////////////////////////////
-// UNLIKE POST
-////////////////////////////////////////////////
-router.put("/unlike/:postID", (req, res) => {
-  const query = { where: { id: req.params.postID } };
-  let likes;
-
-  Post.findOne(query)
-    .then((post) => {
-      likes = post.likes > 0 ? post.likes - 1 : 0;
-      const postEntry = {
-        likes: likes,
-      };
-
-      Post.update(postEntry, query)
-        .then((post) => res.status(200).json(post))
-        .catch((err) => res.status(500).json({ error: err }));
-    })
-    .catch((err) => res.status(500).json({ err }));
 });
 
 ///////////////////////////////////////////////////////////////
