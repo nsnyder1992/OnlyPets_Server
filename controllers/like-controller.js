@@ -11,7 +11,7 @@ router.get("/:postID", async (req, res) => {
   try {
     const likes = await Likes.count({ where: { postId: req.params.postID } });
     const liked = await Likes.findOne({
-      where: { postId: req.params.postID, userId: 1 },
+      where: { postId: req.params.postID, userId: req.user.id },
     });
 
     res.status(200).json({ numLikes: likes, userLiked: liked ? true : false });
@@ -28,7 +28,7 @@ router.post("/:postID", async (req, res) => {
   try {
     const createQuery = {
       postId: req.params.postID,
-      userId: 1, //hardcoded for now. req.user.id later
+      userId: req.user.id,
     };
     const isLiked = await Likes.findOne({ where: createQuery });
 
@@ -56,7 +56,7 @@ router.delete("/:postID", async (req, res) => {
   try {
     const deleteQuery = {
       postId: req.params.postID,
-      userId: 1, //hardcoded for now. req.user.id later
+      userId: req.user.id,
     };
     const isLiked = await Likes.findOne({ where: deleteQuery });
 

@@ -37,6 +37,7 @@ app.use("/user", user);
 ////////////////////////////////////////////////
 //Protected Routes
 ////////////////////////////////////////////////
+app.use(require("./middleware/validate-session"));
 app.use("/pet", pet);
 app.use("/post", post);
 app.use("/like", like);

@@ -5,7 +5,7 @@ const User = require("../db").import("../models/user.js");
 
 //Authentication
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 
 ////////////////////////////////////////////////
 // USER SIGNUP
@@ -13,7 +13,7 @@ const bcrypt = require("bcryptjs");
 router.post("/create", (req, res) => {
   User.create({
     username: req.body.username,
-    passwordhash: bcrypt.hashSync(req.body.password, 13),
+    passwordHash: bcrypt.hashSync(req.body.password, 13),
   })
     .then((user) => {
       let token = jwt.sign(
@@ -44,7 +44,7 @@ router.post("/login", (req, res) => {
   const query = { where: { username: req.body.username } };
   User.findOne(query).then((user) => {
     if (!user) return res.status(500).json({ error: "User Not Found" });
-    bcrypt.compare(req.body.password, user.passwordhash, (err, matches) => {
+    bcrypt.compare(req.body.password, user.passwordHash, (err, matches) => {
       if (!matches) return res.status(502).json({ error: "Login Failed" });
 
       let token = jwt.sign(

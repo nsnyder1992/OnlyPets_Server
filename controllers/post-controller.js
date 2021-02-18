@@ -3,10 +3,6 @@ const router = require("express").Router();
 
 //database
 const Post = require("../db").import("../models/post.js");
-const Likes = require("../db").import("../models/likes.js");
-
-//validation
-// const validateSession = require("../middleware/validate-session");
 
 //cloudinary
 const cloudinary = require("cloudinary");
@@ -46,8 +42,8 @@ router.post("/", (req, res) => {
   const postEntry = {
     photoUrl: req.body.photoUrl,
     description: req.body.description,
-    likes: req.body.likes || 0,
     petId: req.body.petId,
+    ownerId: req.user.id,
   };
 
   Post.create(postEntry)
@@ -74,7 +70,8 @@ router.get("/:page/:limit", async (req, res) => {
       const restRes = { posts: posts, total: count };
       res.status(200).json(restRes);
     })
-    .then((err) => res.status(500).json(err));
+    .then((err) => res.status(500).json(err))
+    .catch((err) => console.log(err));
 });
 
 ////////////////////////////////////////////////
@@ -98,8 +95,16 @@ router.get("/:postID", (req, res) => {
 ////////////////////////////////////////////////
 // UPDATE POST
 ////////////////////////////////////////////////
-router.put("/:postID", (req, res) => {
+router.put("/:postID", async (req, res) => {
   console.log(req.params.postID);
+  const owner = await Post.findOne({
+    attributes: ["ownerId"],
+    where: { id: req.params.postID },
+  });
+
+  if (req.user.id != owner)
+    res.status(401).json({ msg: "You are not the owner of the post" });
+
   const postEntry = {
     photoUrl: req.body.photoUrl,
     description: req.body.description,
@@ -108,8 +113,9 @@ router.put("/:postID", (req, res) => {
 
   const query = { where: { id: req.params.postID } };
 
-  Post.update(postEntry, query).then((post) => res.status(200).json(post));
-  // .catch((err) => res.status(500).json({ error: err }));
+  Post.update(postEntry, query)
+    .then((post) => res.status(200).json(post))
+    .catch((err) => res.status(500).json({ error: err }));
 });
 
 ///////////////////////////////////////////////////////////////
