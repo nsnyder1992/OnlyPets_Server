@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
     },
     moneyToSubscribe: {
-      type: DataTypes.DECIMAL(10, 2),
+      type: DataTypes.DECIMAL(10, 2), // currency to 2 decimal
     },
     ownerId: {
       type: DataTypes.INTEGER,
