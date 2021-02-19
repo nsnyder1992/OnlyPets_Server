@@ -6,11 +6,17 @@ const Post = require("../db").import("../models/post.js");
 
 //cloudinary
 const cloudinary = require("cloudinary");
+const cloudName = process.env.CLOUDINARY_NAME;
 const apiKey = process.env.CLOUDINARY_API_KEY;
 const apiSecret = process.env.CLOUDINARY_API_SECRET;
+cloudinary.config({
+  cloud_name: cloudName,
+  api_key: apiKey,
+  api_secret: apiSecret,
+});
 
 ////////////////////////////////////////////////
-// CLOUDINARY SIGNATURE
+// CLOUDINARY POST SIGNATURE
 ////////////////////////////////////////////////
 router.get("/cloudinary/:publicId", (req, res) => {
   //constants
@@ -31,6 +37,33 @@ router.get("/cloudinary/:publicId", (req, res) => {
     timestamp: timestamp,
     folder: folder,
     public_id: public_id,
+    key: apiKey,
+  });
+});
+
+////////////////////////////////////////////////
+// CLOUDINARY DELETE SIGNATURE
+////////////////////////////////////////////////
+router.get("/cloudinary/delete/:folder/:publicId", (req, res) => {
+  //constants
+  const timestamp = Math.round(new Date().getTime() / 1000);
+  const publicId = `${req.params.publicId}`; //${req.params.folder}/
+
+  const params_to_sign = {
+    timestamp: timestamp,
+    // folder: req.params.folder,
+    public_id: publicId,
+    invalidate: true,
+  };
+
+  const sig = cloudinary.utils.api_sign_request(params_to_sign, apiSecret);
+
+  res.status(200).json({
+    signature: sig,
+    timestamp: timestamp,
+    // folder: req.params.folder,
+    public_id: publicId,
+    invalidate: true,
     key: apiKey,
   });
 });
@@ -121,7 +154,7 @@ router.put("/:postID", async (req, res) => {
 ///////////////////////////////////////////////////////////////
 //DELETE POST
 ///////////////////////////////////////////////////////////////
-router.delete("/:postID", (req, res) => {
+router.delete("/:postID", async (req, res) => {
   const query = { where: { id: req.params.postID } };
 
   Post.destroy(query)
