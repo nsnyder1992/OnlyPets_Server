@@ -19,6 +19,7 @@ app.use(require("./middleware/headers"));
 
 //app options
 app.options("*", (req, res) => {
+  //allows localhost cross-origin on chrome
   res.json({
     status: "OK",
   });

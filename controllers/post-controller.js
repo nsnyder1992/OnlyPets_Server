@@ -9,31 +9,32 @@ const Post = require("../db").import("../models/post.js");
 
 //cloudinary
 const cloudinary = require("cloudinary");
-const cloudinaryUrl = `http://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_NAME}/image/upload?api_key=${process.env.CLOUDINARY_API_KEY}`;
+const apiKey = process.env.CLOUDINARY_API_KEY;
+const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
 ////////////////////////////////////////////////
 // CLOUDINARY SIGNATURE
 ////////////////////////////////////////////////
 router.get("/cloudinary/:publicId", (req, res) => {
-  let timestamp = Math.round(new Date().getTime() / 1000);
+  //constants
+  const timestamp = Math.round(new Date().getTime() / 1000);
+  const public_id = `id-${timestamp}-${req.params.publicId}`;
+  const folder = "onlyPets";
 
-  let params_to_sign = {
+  const params_to_sign = {
     timestamp: timestamp,
-    folder: "onlyPets",
-    public_id: `id-${timestamp}-${req.params.publicId}`,
+    folder: folder,
+    public_id: public_id,
   };
 
-  let sig = cloudinary.utils.api_sign_request(
-    params_to_sign,
-    process.env.CLOUDINARY_API_SECRET
-  );
+  const sig = cloudinary.utils.api_sign_request(params_to_sign, apiSecret);
 
   res.status(200).json({
     signature: sig,
     timestamp: timestamp,
-    folder: "onlyPets",
-    public_id: `id-${timestamp}-${req.params.publicId}`,
-    key: process.env.CLOUDINARY_API_KEY,
+    folder: folder,
+    public_id: public_id,
+    key: apiKey,
   });
 });
 
@@ -56,10 +57,23 @@ router.post("/", (req, res) => {
 ////////////////////////////////////////////////
 // GET POSTS
 ////////////////////////////////////////////////
-router.get("/", (req, res) => {
-  Post.findAll()
-    .then((posts) => res.status(200).json(posts))
-    .catch((err) => res.status(500).json({ err }));
+router.get("/:page/:limit", async (req, res) => {
+  const limit = req.params.limit;
+  const offset = (req.params.page - 1) * limit;
+  const query = {
+    limit: limit,
+    offset: offset,
+    order: [["createdAt", "DESC"]],
+  };
+
+  const count = await Post.count();
+
+  Post.findAll(query)
+    .then((posts) => {
+      const restRes = { posts: posts, total: count };
+      res.status(200).json(restRes);
+    })
+    .then((err) => res.status(500).json(err));
 });
 
 ////////////////////////////////////////////////
@@ -84,7 +98,7 @@ router.get("/:postID", (req, res) => {
 // UPDATE POST
 ////////////////////////////////////////////////
 router.put("/:postID", (req, res) => {
-  console.log(req.body);
+  console.log(req.params.postID);
   const postEntry = {
     photoUrl: req.body.photoUrl,
     description: req.body.description,
@@ -93,9 +107,8 @@ router.put("/:postID", (req, res) => {
 
   const query = { where: { id: req.params.postID } };
 
-  Post.update(postEntry, query)
-    .then((post) => res.status(200).json(post))
-    .catch((err) => res.status(500).json({ error: err }));
+  Post.update(postEntry, query).then((post) => res.status(200).json(post));
+  // .catch((err) => res.status(500).json({ error: err }));
 });
 
 ////////////////////////////////////////////////
