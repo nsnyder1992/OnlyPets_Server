@@ -7,17 +7,15 @@ const Subscriptions = require("../db").import("../models/subscriptions.js");
 ////////////////////////////////////////////////
 // GET SUBSCRIBERS
 ////////////////////////////////////////////////
-router.get("/:petID", async (req, res) => {
-  try {
-    const subscribers = await Subscriptions.findALL({
-      where: { petId: req.params.petID },
+router.get("/:petID", (req, res) => {
+  Subscriptions.findAll({
+    where: { petId: req.params.petID },
+  })
+    .then((subscribers) => res.status(200).json({ subscribers: subscribers }))
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({ error: err });
     });
-
-    res.status(200).json({ subscribers: subscribers });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: err });
-  }
 });
 
 ////////////////////////////////////////////////
@@ -28,7 +26,7 @@ router.get("/num/:petID", async (req, res) => {
     const numSub = await Subscriptions.count({
       where: { petId: req.params.petID },
     });
-    const isSubed = await Likes.findOne({
+    const isSubed = await Subscriptions.findOne({
       where: { petId: req.params.petID, userId: req.user.id },
     });
 
@@ -88,13 +86,11 @@ router.delete("/:petID", async (req, res) => {
       where: { petId: req.params.petID },
     });
     if (!isSubed)
-      return res
-        .status(200)
-        .json({
-          numSub: numSub,
-          userSub: false,
-          msg: "Already NOT Subscribed",
-        }); // already NOT liked exit function
+      return res.status(200).json({
+        numSub: numSub,
+        userSub: false,
+        msg: "Already NOT Subscribed",
+      }); // already NOT liked exit function
 
     await Subscriptions.destroy({ where: deleteQuery });
 

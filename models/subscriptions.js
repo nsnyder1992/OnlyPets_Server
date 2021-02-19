@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  const Subscriptions = sequelize.define("likes", {
+  const Subscriptions = sequelize.define("subscriptions", {
     petId: {
       type: DataTypes.INTEGER,
       allowNull: false,
