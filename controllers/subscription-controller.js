@@ -22,6 +22,7 @@ router.get("/:petID", (req, res) => {
 // GET NUMBER OF SUBSCRIBERS
 ////////////////////////////////////////////////
 router.get("/num/:petID", async (req, res) => {
+  console.log("num");
   try {
     const numSub = await Subscriptions.count({
       where: { petId: req.params.petID },
