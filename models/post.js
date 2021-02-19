@@ -7,10 +7,11 @@ module.exports = (sequelize, DataTypes) => {
     description: {
       type: DataTypes.STRING,
     },
-    likes: {
-      type: DataTypes.INTEGER,
-    },
     petId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    ownerId: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },

@@ -4,16 +4,19 @@ const router = require("express").Router();
 //database
 const Post = require("../db").import("../models/post.js");
 
-//validation
-// const validateSession = require("../middleware/validate-session");
-
 //cloudinary
 const cloudinary = require("cloudinary");
+const cloudName = process.env.CLOUDINARY_NAME;
 const apiKey = process.env.CLOUDINARY_API_KEY;
 const apiSecret = process.env.CLOUDINARY_API_SECRET;
+cloudinary.config({
+  cloud_name: cloudName,
+  api_key: apiKey,
+  api_secret: apiSecret,
+});
 
 ////////////////////////////////////////////////
-// CLOUDINARY SIGNATURE
+// CLOUDINARY POST SIGNATURE
 ////////////////////////////////////////////////
 router.get("/cloudinary/:publicId", (req, res) => {
   //constants
@@ -39,14 +42,41 @@ router.get("/cloudinary/:publicId", (req, res) => {
 });
 
 ////////////////////////////////////////////////
+// CLOUDINARY DELETE SIGNATURE
+////////////////////////////////////////////////
+router.get("/cloudinary/delete/:folder/:publicId", (req, res) => {
+  //constants
+  const timestamp = Math.round(new Date().getTime() / 1000);
+  const publicId = `${req.params.publicId}`; //${req.params.folder}/
+
+  const params_to_sign = {
+    timestamp: timestamp,
+    // folder: req.params.folder,
+    public_id: publicId,
+    invalidate: true,
+  };
+
+  const sig = cloudinary.utils.api_sign_request(params_to_sign, apiSecret);
+
+  res.status(200).json({
+    signature: sig,
+    timestamp: timestamp,
+    // folder: req.params.folder,
+    public_id: publicId,
+    invalidate: true,
+    key: apiKey,
+  });
+});
+
+////////////////////////////////////////////////
 // CREATE POST
 ////////////////////////////////////////////////
 router.post("/", (req, res) => {
   const postEntry = {
     photoUrl: req.body.photoUrl,
     description: req.body.description,
-    likes: req.body.likes || 0,
     petId: req.body.petId,
+    ownerId: req.user.id,
   };
 
   Post.create(postEntry)
@@ -73,7 +103,8 @@ router.get("/:page/:limit", async (req, res) => {
       const restRes = { posts: posts, total: count };
       res.status(200).json(restRes);
     })
-    .then((err) => res.status(500).json(err));
+    .then((err) => res.status(500).json(err))
+    .catch((err) => console.log(err));
 });
 
 ////////////////////////////////////////////////
@@ -97,8 +128,16 @@ router.get("/:postID", (req, res) => {
 ////////////////////////////////////////////////
 // UPDATE POST
 ////////////////////////////////////////////////
-router.put("/:postID", (req, res) => {
+router.put("/:postID", async (req, res) => {
   console.log(req.params.postID);
+  const owner = await Post.findOne({
+    attributes: ["ownerId"],
+    where: { id: req.params.postID },
+  });
+
+  if (req.user.id != owner)
+    res.status(401).json({ msg: "You are not the owner of the post" });
+
   const postEntry = {
     photoUrl: req.body.photoUrl,
     description: req.body.description,
@@ -107,56 +146,15 @@ router.put("/:postID", (req, res) => {
 
   const query = { where: { id: req.params.postID } };
 
-  Post.update(postEntry, query).then((post) => res.status(200).json(post));
-  // .catch((err) => res.status(500).json({ error: err }));
-});
-
-////////////////////////////////////////////////
-// LIKE POST
-////////////////////////////////////////////////
-router.put("/like/:postID", (req, res) => {
-  const query = { where: { id: req.params.postID } };
-  let likes;
-
-  Post.findOne(query)
-    .then((post) => {
-      likes = post.likes + 1;
-      const postEntry = {
-        likes: likes,
-      };
-
-      Post.update(postEntry, query)
-        .then((post) => res.status(200).json(post))
-        .catch((err) => res.status(500).json({ error: err }));
-    })
-    .catch((err) => res.status(500).json({ err }));
-});
-
-////////////////////////////////////////////////
-// UNLIKE POST
-////////////////////////////////////////////////
-router.put("/unlike/:postID", (req, res) => {
-  const query = { where: { id: req.params.postID } };
-  let likes;
-
-  Post.findOne(query)
-    .then((post) => {
-      likes = post.likes > 0 ? post.likes - 1 : 0;
-      const postEntry = {
-        likes: likes,
-      };
-
-      Post.update(postEntry, query)
-        .then((post) => res.status(200).json(post))
-        .catch((err) => res.status(500).json({ error: err }));
-    })
-    .catch((err) => res.status(500).json({ err }));
+  Post.update(postEntry, query)
+    .then((post) => res.status(200).json(post))
+    .catch((err) => res.status(500).json({ error: err }));
 });
 
 ///////////////////////////////////////////////////////////////
 //DELETE POST
 ///////////////////////////////////////////////////////////////
-router.delete("/:postID", (req, res) => {
+router.delete("/:postID", async (req, res) => {
   const query = { where: { id: req.params.postID } };
 
   Post.destroy(query)
