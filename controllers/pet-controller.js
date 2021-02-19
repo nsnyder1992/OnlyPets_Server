@@ -22,21 +22,21 @@ router.get("/", (req, res) => {
 });
 
 router.post("/create", (req, res) => {
-  // Pet.create({
-  //   name: req.body.pet.name,
-  //   type: req.body.pet.type,
-  //   description: req.body.pet.description,
-  //   moneyToSuscribe: req.body.pet.moneyToSuscribe,
-  //   ownerId: req.body.pet.ownerId
-  // })
-  //   .then((pet) => {
-  //     res.status(200).json(pet);
-  //   })
-  //   .catch((error) => {
-  //     res.status(500).json(error);
-  //   });
+  Pet.create({
+    name: req.body.pet.name,
+    type: req.body.pet.type,
+    description: req.body.pet.description,
+    moneyToSuscribe: req.body.pet.moneyToSuscribe,
+    ownerId: req.body.pet.ownerId
+  })
+    .then((pet) => {
+      res.status(200).json(pet);
+    })
+    .catch((error) => {
+      res.status(500).json(error);
+    });
 
-  res.json({mesg:"ksjdhfksjdhf"})
+
 });
 router.delete("/:id", (req, res) => {
   Pet.destroy({ where: { id: req.params.id, } })     //userId: req.user.id 
