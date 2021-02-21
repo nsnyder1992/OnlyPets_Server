@@ -4,16 +4,11 @@ const sequelize = require("../db");
 const { route } = require("./user-controller");
 const Pet = sequelize.import("../models/pet.js");
 
-
-
-
 router.get("/", (req, res) => {
   Pet.findAll()
     .then((pets) => {
       if (pets.length === 0)
-        return res
-          .status(200)
-          .json({ message: "No pets found!" });
+        return res.status(200).json({ message: "No pets found!" });
       res.status(200).json({ pets });
     })
     .catch((error) => {
@@ -27,7 +22,7 @@ router.post("/create", (req, res) => {
     type: req.body.pet.type,
     description: req.body.pet.description,
     moneyToSuscribe: req.body.pet.moneyToSuscribe,
-    ownerId: req.body.pet.ownerId
+    ownerId: req.body.pet.ownerId,
   })
     .then((pet) => {
       res.status(200).json(pet);
@@ -35,11 +30,10 @@ router.post("/create", (req, res) => {
     .catch((error) => {
       res.status(500).json(error);
     });
-
-
 });
+
 router.delete("/:id", (req, res) => {
-  Pet.destroy({ where: { id: req.params.id, } })     //userId: req.user.id 
+  Pet.destroy({ where: { id: req.params.id } }) //userId: req.user.id
     .then((response) => {
       res.status(200).json({
         message: "Successfully deleted pet!",
@@ -50,6 +44,7 @@ router.delete("/:id", (req, res) => {
       res.status(500).json(error);
     });
 });
+
 router.put("/:id", (req, res) => {
   Pet.update(req.body, {
     where: { id: req.params.id },
@@ -62,12 +57,4 @@ router.put("/:id", (req, res) => {
     });
 });
 
-
 module.exports = router;
-
-
-
-
-
-
-

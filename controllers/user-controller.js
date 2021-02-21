@@ -7,16 +7,16 @@ let bcrypt = require("bcrypt");
 
 router.post("/create", function (req, res) {
   User.create({
-    email: req.body.user.email,
-    password: bcrypt.hashSync(req.body.user.password, 13),
+    username: req.body.user.username,
+    passwordHash: bcrypt.hashSync(req.body.user.password, 13),
   })
-    .then(function createSuccess(user) {
+    .then((user) => {
       let token = jwt.sign(
-        { id: user.id, email: user.email },
+        { id: user.id, username: user.username },
         process.env.JWT_SECRET,
         { expiresIn: 60 * 60 * 24 }
       );
-
+      console.log(token);
       res.json({
         user: user,
         message: "User successfully created",
@@ -24,29 +24,32 @@ router.post("/create", function (req, res) {
       });
     })
 
-    .catch((err) => res.status(500).json({ error: err }));
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({ error: err });
+    });
 });
 
 router.post("/login", function (req, res) {
   User.findOne({
     where: {
-      email: req.body.user.email,
+      username: req.body.user.username,
     },
   })
 
-    .then(function loginSuccess(user) {
+    .then((user) => {
       if (user) {
         bcrypt.compare(
           req.body.user.password,
-          user.password,
+          user.passwordHash,
           function (err, matches) {
             if (matches) {
               let token = jwt.sign(
-                { id: user.id, email: user.email },
+                { id: user.id, username: user.username },
                 process.env.JWT_SECRET,
                 { expiresIn: 60 * 60 * 24 }
               );
-
+              console.log(token);
               res.status(200).json({
                 user: user,
                 message: "User successfully created",
