@@ -5,6 +5,8 @@ const User = require("../db").import("../models/user.js");
 const jwt = require("jsonwebtoken");
 let bcrypt = require("bcrypt");
 
+const validateSession = require("../middleware/validate-session");
+
 router.post("/create", function (req, res) {
   User.create({
     username: req.body.user.username,
@@ -16,7 +18,7 @@ router.post("/create", function (req, res) {
         process.env.JWT_SECRET,
         { expiresIn: 60 * 60 * 24 }
       );
-      console.log(token);
+
       res.json({
         user: user,
         message: "User successfully created",
@@ -49,7 +51,7 @@ router.post("/login", function (req, res) {
                 process.env.JWT_SECRET,
                 { expiresIn: 60 * 60 * 24 }
               );
-              console.log(token);
+
               res.status(200).json({
                 user: user,
                 message: "User successfully created",
@@ -65,6 +67,17 @@ router.post("/login", function (req, res) {
       }
     })
     .catch((err) => res.status(500).json({ error: err }));
+});
+
+//////////////////////////////////////////////////////////////////////
+// GET LOGGED IN USER BY TOKEN
+//////////////////////////////////////////////////////////////////////
+router.get("/", validateSession, (req, res) => {
+  User.findOne({ where: { id: req.user.id } })
+    .then((user) => {
+      res.status(200).json({ username: user.username });
+    })
+    .catch((err) => res.status(500).json({ err: err }));
 });
 
 module.exports = router;
