@@ -136,7 +136,7 @@ router.put("/:postID", async (req, res) => {
   });
 
   if (req.user.id != owner)
-    res.status(401).json({ msg: "You are not the owner of the post" });
+    return res.status(401).json({ msg: "You are not the owner of the post" });
 
   const postEntry = {
     photoUrl: req.body.photoUrl,
