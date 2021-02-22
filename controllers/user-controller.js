@@ -70,9 +70,20 @@ router.post("/login", function (req, res) {
 });
 
 //////////////////////////////////////////////////////////////////////
+// GET USER BY ID
+//////////////////////////////////////////////////////////////////////
+router.get("/byId/:id", validateSession, (req, res) => {
+  User.findOne({ where: { id: req.params.id } })
+    .then((user) => {
+      res.status(200).json({ username: user.username });
+    })
+    .catch((err) => res.status(500).json({ err: err }));
+});
+
+//////////////////////////////////////////////////////////////////////
 // GET LOGGED IN USER BY TOKEN
 //////////////////////////////////////////////////////////////////////
-router.get("/", validateSession, (req, res) => {
+router.get("/self", validateSession, (req, res) => {
   User.findOne({ where: { id: req.user.id } })
     .then((user) => {
       res.status(200).json({ username: user.username });
