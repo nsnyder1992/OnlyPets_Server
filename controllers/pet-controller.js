@@ -50,6 +50,21 @@ router.get("/:id", (req, res) => {
 });
 
 ////////////////////////////////////////////////
+// GET PET BY TYPE
+////////////////////////////////////////////////
+router.get("/type/:type", (req, res) => {
+  Pet.findAll({ where: { type: req.params.type } })
+    .then((pets) => {
+      if (pets.length === 0)
+        return res.status(200).json({ message: "No pets found!" });
+      res.status(200).json({ pets });
+    })
+    .catch((error) => {
+      res.status(500).json({ error });
+    });
+});
+
+////////////////////////////////////////////////
 // CREATE PET
 ////////////////////////////////////////////////
 router.post("/create", (req, res) => {
