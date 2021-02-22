@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const User = require("../db").import("../models/user.js");
+const User = require("../db").sequelize.import("../models/user.js");
 
 const validateSession = (req, res, next) => {
   const token = req.headers.authorization;

@@ -1,7 +1,7 @@
 require("dotenv");
 let express = require("express");
 const router = require("express").Router();
-const User = require("../db").import("../models/user.js");
+const User = require("../db").sequelize.import("../models/user.js");
 const jwt = require("jsonwebtoken");
 let bcrypt = require("bcrypt");
 

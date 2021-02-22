@@ -6,8 +6,8 @@ const express = require("express");
 const app = express();
 
 //database
-const sequelize = require("./db");
-sequelize.sync();
+const db = require("./db");
+db.sequelize.sync();
 
 //controllers
 const user = require("./controllers/user-controller");

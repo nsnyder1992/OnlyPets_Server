@@ -1,3 +1,5 @@
+// const Pet = require("../db").import("./pet.js");
+
 module.exports = (sequelize, DataTypes) => {
   const Post = sequelize.define("post", {
     photoUrl: {
@@ -9,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
     },
     petId: {
       type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    petType: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
     ownerId: {

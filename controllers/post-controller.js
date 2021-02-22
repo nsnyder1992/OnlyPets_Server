@@ -2,7 +2,7 @@
 const router = require("express").Router();
 
 //database
-const Post = require("../db").import("../models/post.js");
+const Post = require("../db").sequelize.import("../models/post.js");
 
 //cloudinary
 const cloudinary = require("cloudinary");
@@ -76,6 +76,7 @@ router.post("/", (req, res) => {
     photoUrl: req.body.photoUrl,
     description: req.body.description,
     petId: req.body.petId,
+    petType: req.body.petType,
     ownerId: req.user.id,
   };
 
@@ -108,12 +109,57 @@ router.get("/:page/:limit", async (req, res) => {
 });
 
 ////////////////////////////////////////////////
+// GET POSTS BY PET TYPE
+////////////////////////////////////////////////
+router.get("/byPetType/:type/:page/:limit", async (req, res) => {
+  const limit = req.params.limit;
+  const offset = (req.params.page - 1) * limit;
+
+  const query = {
+    limit: limit,
+    offset: offset,
+    order: [["createdAt", "DESC"]],
+  };
+
+  if (req.params.type !== "all") query.where = { petType: req.params.type };
+
+  const count = await Post.count(query);
+
+  Post.findAll(query)
+    .then((posts) => {
+      const restRes = { posts: posts, total: count };
+      res.status(200).json(restRes);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json(err);
+    });
+});
+
+////////////////////////////////////////////////
 // GET POSTS BY PET
 ////////////////////////////////////////////////
-router.get("/byPet/:petID", (req, res) => {
-  Post.findAll({ where: { petId: req.params.petID } })
-    .then((posts) => res.status(200).json(posts))
-    .catch((err) => res.status(500).json({ err }));
+router.get("/byPet/:petID/:page/:limit", async (req, res) => {
+  const limit = req.params.limit;
+  const offset = (req.params.page - 1) * limit;
+  const query = {
+    where: { petId: req.params.petID },
+    limit: limit,
+    offset: offset,
+    order: [["createdAt", "DESC"]],
+  };
+
+  const count = await Post.count({ where: { petId: req.params.petID } });
+
+  Post.findAll(query)
+    .then((posts) => {
+      const restRes = { posts: posts, total: count };
+      res.status(200).json(restRes);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json(err);
+    });
 });
 
 ////////////////////////////////////////////////
@@ -134,8 +180,9 @@ router.put("/:postID", async (req, res) => {
     attributes: ["ownerId"],
     where: { id: req.params.postID },
   });
+  console.log("request", req.user.id, "actual", owner.ownerId);
 
-  if (req.user.id != owner)
+  if (req.user.id != owner.ownerId)
     return res.status(401).json({ msg: "You are not the owner of the post" });
 
   const postEntry = {

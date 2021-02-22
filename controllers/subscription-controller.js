@@ -2,7 +2,9 @@
 const router = require("express").Router();
 
 //database
-const Subscriptions = require("../db").import("../models/subscriptions.js");
+const Subscriptions = require("../db").sequelize.import(
+  "../models/subscriptions.js"
+);
 
 ////////////////////////////////////////////////
 // GET SUBSCRIBERS

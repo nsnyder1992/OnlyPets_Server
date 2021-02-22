@@ -2,7 +2,7 @@
 const router = require("express").Router();
 
 //database
-const Likes = require("../db").import("../models/likes.js");
+const Likes = require("../db").sequelize.import("../models/likes.js");
 
 ////////////////////////////////////////////////
 // GET LIKES
