@@ -20,6 +20,21 @@ router.get("/", (req, res) => {
 });
 
 ////////////////////////////////////////////////
+// GET ALL PETS BY OWNER
+////////////////////////////////////////////////
+router.get("/owned", (req, res) => {
+  Pet.findAll({ where: { ownerId: req.user.id } })
+    .then((pets) => {
+      if (pets.length === 0)
+        return res.status(200).json({ message: "No pets found!" });
+      res.status(200).json({ pets });
+    })
+    .catch((error) => {
+      res.status(500).json({ error });
+    });
+});
+
+////////////////////////////////////////////////
 // GET PET BY ID
 ////////////////////////////////////////////////
 router.get("/:id", (req, res) => {
