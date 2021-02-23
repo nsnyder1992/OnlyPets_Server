@@ -116,14 +116,15 @@ router.get("/:page/:limit", async (req, res) => {
 ////////////////////////////////////////////////
 // GET ALL LIKED
 ////////////////////////////////////////////////
-router.get("/liked/:page/:limit", async (req, res) => {
+router.get("/liked/:type/:page/:limit", async (req, res) => {
   const limit = req.params.limit;
   const offset = (req.params.page - 1) * limit;
+  const type = req.params.type;
 
   try {
-    const posts = await Post.findAll({
-      limit: limit,
-      offset: offset,
+    //find liked query without pagination and pet type
+    const query = {
+      order: [["createdAt", "DESC"]],
       include: [
         {
           model: User,
@@ -134,9 +135,20 @@ router.get("/liked/:page/:limit", async (req, res) => {
           model: Pet,
         },
       ],
-    });
+    };
 
-    res.status(200).json({ posts: posts });
+    //set pet type to req type if not set to all
+    if (type !== "all") query.include[1].where = { type: req.params.type };
+
+    //get count of all posts with query without pagination
+    const count = await Post.count(query);
+
+    //set query pagination params and get posts
+    query.limit = limit;
+    query.offset = offset;
+    const posts = await Post.findAll(query);
+
+    res.status(200).json({ posts, count });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: err });
@@ -146,8 +158,13 @@ router.get("/liked/:page/:limit", async (req, res) => {
 ////////////////////////////////////////////////
 // GET ALL SUBSCRIBED
 ////////////////////////////////////////////////
-router.get("/subscribed", async (req, res) => {
+router.get("/subscribed/:type/:page/:limit", async (req, res) => {
+  const limit = req.params.limit;
+  const offset = (req.params.page - 1) * limit;
+  const type = req.params.type;
+
   try {
+    //get user subscribed pets
     const resSub = await Subscriptions.findAll({
       attributes: ["petId"],
       where: { userId: req.user.id },
@@ -158,8 +175,10 @@ router.get("/subscribed", async (req, res) => {
 
     for (pet of subscribed) subPetIds.push(pet.petId);
 
-    console.log(subPetIds);
-    const posts = await Post.findAll({
+    //query without pagination and pet type
+    const query = {
+      order: [["createdAt", "DESC"]],
+      where: { petId: subPetIds },
       include: {
         model: Pet,
         include: {
@@ -167,10 +186,20 @@ router.get("/subscribed", async (req, res) => {
           attributes: ["id", "username"],
         },
       },
-      where: { petId: subPetIds },
-    });
+    };
+    //set pet type to req type if not set to all
+    if (type !== "all") query.include.where = { type: req.params.type };
 
-    res.status(200).json({ posts: posts });
+    const count = await Post.count(query);
+
+    //add paginated query params to query
+    query.limit = limit;
+    query.offset = offset;
+
+    //paginate posts based on subscribed pets
+    const posts = await Post.findAll(query);
+
+    res.status(200).json({ posts, count });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: err });
