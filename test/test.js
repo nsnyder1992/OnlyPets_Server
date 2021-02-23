@@ -8,14 +8,12 @@ const cloudinaryUrl =
   "https://api.cloudinary.com/v1_1/nsnyder1992/image/upload";
 
 //setup types and ids for later use
-const types = ["dog"]; //"cat", "fox"];
-let petId;
-let petType;
+const types = ["dog", "cat"]; //"cat", "fox"];
 
-const setupDB = async () => {
+const createUsersPets = async () => {
   let indexer = 0;
-  const res = await fetch("https://jsonplaceholder.typicode.com/posts");
-  const posts = await res.json();
+  let petId;
+  let petType;
 
   /////////////////////////////////////////////
   //CREATE USERS
@@ -62,7 +60,12 @@ const setupDB = async () => {
     for (let j of types) {
       //get name
       indexer = indexer >= 9 ? 0 : indexer + 1;
-      let name = names[indexer];
+      //   let name = names[indexer];
+      let name;
+      await fetch("https://uzby.com/api.php?min=3&max=8")
+        .then((res) => res.text())
+        .then((text) => (name = text))
+        .catch((err) => console.log(err));
 
       await fetch(`${baseUrl}/pet/create`, {
         method: "POST",
@@ -88,47 +91,133 @@ const setupDB = async () => {
         .catch((err) => {
           return console.log(err);
         });
-
-      /////////////////////////////////////////////
-      //CREATE POSTS
-      /////////////////////////////////////////////
-      for (let z = 0; z < 3; z++) {
-        const res = await fetch("https://dog.ceo/api/breeds/image/random");
-        const json = await res.json();
-        const img = json.message;
-
-        const cloudinaryJson = await uploadImg(
-          signatureUrl,
-          cloudinaryUrl,
-          img,
-          token
-        );
-
-        const description =
-          posts[Math.floor(Math.random() * posts.length)].body;
-
-        await fetch("http://localhost:3001/post/", {
-          method: "Post",
-          body: JSON.stringify({
-            photoUrl: img,
-            description: description,
-            petId: petId,
-            petType: petType,
-          }),
-          headers: {
-            "Content-Type": "application/json",
-            authorization: token,
-          },
-        })
-          .then((res) => res.json())
-          .then((json) => console.log(json))
-          .catch((err) => {
-            return console.log(err);
-          });
-      }
     }
   }
-  console.log("done");
+};
+
+/////////////////////////////////////////////
+//CREATE POST
+/////////////////////////////////////////////
+const createPosts = async () => {
+  //sign in
+  let token;
+  await fetch(baseUrl + "/user/login", {
+    method: "POST",
+    body: JSON.stringify({
+      user: { username: "nick0@test.com", password: "password" },
+    }),
+    headers: {
+      "content-type": "application/json",
+    },
+  })
+    .then((res) => res.json())
+    .then((json) => {
+      console.log("sigin", json.sessionToken);
+      token = json.sessionToken;
+    })
+    .catch((err) => console.log(err));
+
+  // get pets
+  let pets;
+  await fetch(baseUrl + "/pet/", {
+    method: "GET",
+    headers: {
+      authorization: token,
+    },
+  })
+    .then((res) => res.json())
+    .then((json) => {
+      console.log(json.pets);
+      pets = json.pets;
+    })
+    .catch((err) => console.log(err));
+
+  //get post descriptions from external api
+  const resDesc = await fetch("https://jsonplaceholder.typicode.com/posts");
+  const posts = await resDesc.json();
+
+  for (let i = 0; i < 70; i++) {
+    let pet = pets[Math.floor(Math.random() * pets.length)];
+    console.log(pet);
+    let petId = pet.id;
+    let ownerId = pet.ownerId;
+    let petType = pet.type;
+
+    //signIn as ownerId
+    resUser = await fetch(`${baseUrl}/user/byId/${ownerId}`, {
+      method: "GET",
+      headers: {
+        authorization: token,
+      },
+    });
+    user = await resUser.json();
+
+    console.log(user);
+
+    await fetch(baseUrl + "/user/login", {
+      method: "POST",
+      body: JSON.stringify({
+        user: { username: user.username, password: "password" },
+      }),
+      headers: {
+        "content-type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        console.log("sigin", json.sessionToken);
+        token = json.sessionToken;
+      })
+      .catch((err) => console.log(err));
+
+    let res;
+    let img;
+    if (petType == "dog") {
+      res = await fetch("https://dog.ceo/api/breeds/image/random");
+      const json = await res.json();
+      img = json.message;
+    }
+    if (petType == "cat") {
+      res = await fetch("https://api.thecatapi.com/v1/images/search");
+      const json = await res.json();
+      console.log(json);
+      img = json[0].url;
+    }
+
+    const cloudinaryJson = await uploadImg(
+      signatureUrl,
+      cloudinaryUrl,
+      img,
+      token
+    );
+
+    const description = posts[Math.floor(Math.random() * posts.length)].body;
+
+    await fetch(baseUrl + "/post/", {
+      method: "Post",
+      body: JSON.stringify({
+        photoUrl: cloudinaryJson.url,
+        description: description,
+        petId: petId,
+        petType: petType,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        authorization: token,
+      },
+    })
+      .then((res) => res.json())
+      .then((json) => console.log(json))
+      .catch((err) => {
+        return console.log(err);
+      });
+  }
+};
+
+const setupDB = async () => {
+  await createUsersPets();
+  await createPosts();
+  console.log("DONE!!!");
 };
 
 setupDB();
