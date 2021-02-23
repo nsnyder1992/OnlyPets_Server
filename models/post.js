@@ -9,18 +9,6 @@ module.exports = (sequelize, DataTypes) => {
     description: {
       type: DataTypes.STRING,
     },
-    petId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    petType: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    ownerId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
   });
   return Post;
 };

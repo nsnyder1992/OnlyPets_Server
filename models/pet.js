@@ -13,10 +13,6 @@ module.exports = (sequelize, DataTypes) => {
     moneyToSubscribe: {
       type: DataTypes.DECIMAL(10, 2), // currency to 2 decimal
     },
-    ownerId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
   });
   return Pet;
 };

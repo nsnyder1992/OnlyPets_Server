@@ -7,7 +7,8 @@ const app = express();
 
 //database
 const db = require("./db");
-db.sequelize.sync();
+db.createAssoc();
+db.sync();
 
 //controllers
 const user = require("./controllers/user-controller");

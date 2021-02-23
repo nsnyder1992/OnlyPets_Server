@@ -2,7 +2,25 @@
 const router = require("express").Router();
 
 //database
-const Likes = require("../db").sequelize.import("../models/likes.js");
+const Likes = require("../db").likes;
+const Post = require("../db").post;
+
+////////////////////////////////////////////////
+// GET LIKES
+////////////////////////////////////////////////
+router.get("/", async (req, res) => {
+  try {
+    const posts = await Likes.findAll({
+      where: { postId: req.params.postID, userId: req.user.id },
+      include: Post,
+    });
+
+    res.status(200).json({ posts: posts });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err });
+  }
+});
 
 ////////////////////////////////////////////////
 // GET LIKES
@@ -12,6 +30,7 @@ router.get("/:postID", async (req, res) => {
     const likes = await Likes.count({ where: { postId: req.params.postID } });
     const liked = await Likes.findOne({
       where: { postId: req.params.postID, userId: req.user.id },
+      include: Post,
     });
 
     res.status(200).json({ numLikes: likes, userLiked: liked ? true : false });

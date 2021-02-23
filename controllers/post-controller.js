@@ -2,7 +2,8 @@
 const router = require("express").Router();
 
 //database
-const Post = require("../db").sequelize.import("../models/post.js");
+const Post = require("../db").post;
+const Pet = require("../db").pet;
 
 //cloudinary
 const cloudinary = require("cloudinary");
@@ -119,21 +120,21 @@ router.get("/byPetType/:type/:page/:limit", async (req, res) => {
     limit: limit,
     offset: offset,
     order: [["createdAt", "DESC"]],
+    include: Pet,
   };
 
   if (req.params.type !== "all") query.where = { petType: req.params.type };
 
   const count = await Post.count(query);
 
-  Post.findAll(query)
-    .then((posts) => {
-      const restRes = { posts: posts, total: count };
-      res.status(200).json(restRes);
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json(err);
-    });
+  try {
+    const posts = await Post.findAll(query);
+    // const postPets = await Post.getPet();
+    const restRes = { posts: posts, total: count };
+    res.status(200).json(restRes);
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 ////////////////////////////////////////////////
