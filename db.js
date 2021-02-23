@@ -63,8 +63,8 @@ db.subscriptions = sequelize.define("subscriptions", {
 //associations
 const createAssoc = async () => {
   //user owns pets
-  await db.user.hasMany(db.pet, { foreignKey: "ownerId" });
-  await db.pet.belongsTo(db.user, { as: "owner" });
+  await db.user.hasMany(db.pet);
+  await db.pet.belongsTo(db.user);
 
   //pet -> posts
   await db.pet.hasMany(db.post);
@@ -87,6 +87,8 @@ const syncDB = async () => {
   await db.user.sync();
   await db.pet.sync();
   await db.post.sync();
+  await db.likes.sync();
+  await db.subscriptions.sync();
 
   //the rest
   await db.sequelize.sync();

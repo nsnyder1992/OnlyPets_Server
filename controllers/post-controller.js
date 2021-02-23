@@ -4,6 +4,9 @@ const router = require("express").Router();
 //database
 const Post = require("../db").post;
 const Pet = require("../db").pet;
+const User = require("../db").user;
+const Likes = require("../db").likes;
+const Subscriptions = require("../db").subscriptions;
 
 //cloudinary
 const cloudinary = require("cloudinary");
@@ -110,6 +113,65 @@ router.get("/:page/:limit", async (req, res) => {
 });
 
 ////////////////////////////////////////////////
+// GET ALL LIKED
+////////////////////////////////////////////////
+router.get("/liked", async (req, res) => {
+  try {
+    const posts = await Post.findAll({
+      include: [
+        {
+          model: User,
+          attributes: ["id", "username"],
+          where: { id: req.user.id },
+        },
+        {
+          model: Pet,
+        },
+      ],
+    });
+
+    res.status(200).json({ posts: posts });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err });
+  }
+});
+
+////////////////////////////////////////////////
+// GET ALL SUBSCRIBED
+////////////////////////////////////////////////
+router.get("/subscribed", async (req, res) => {
+  try {
+    const resSub = await Subscriptions.findAll({
+      attributes: ["petId"],
+      where: { userId: req.user.id },
+    });
+    const subscribedJson = await JSON.stringify(resSub);
+    const subscribed = await JSON.parse(subscribedJson);
+    let subPetIds = [];
+
+    for (pet of subscribed) subPetIds.push(pet.petId);
+
+    console.log(subPetIds);
+    const posts = await Post.findAll({
+      include: {
+        model: Pet,
+        include: {
+          model: User,
+          attributes: ["id", "username"],
+        },
+      },
+      where: { petId: subPetIds },
+    });
+
+    res.status(200).json({ posts: posts });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err });
+  }
+});
+
+////////////////////////////////////////////////
 // GET POSTS BY PET TYPE
 ////////////////////////////////////////////////
 router.get("/byPetType/:type/:page/:limit", async (req, res) => {
@@ -120,10 +182,17 @@ router.get("/byPetType/:type/:page/:limit", async (req, res) => {
     limit: limit,
     offset: offset,
     order: [["createdAt", "DESC"]],
-    include: Pet,
+    include: {
+      model: Pet,
+      include: {
+        model: User,
+        attributes: ["id", "username"],
+      },
+    },
   };
 
-  if (req.params.type !== "all") query.where = { petType: req.params.type };
+  if (req.params.type !== "all")
+    query.include.where = { type: req.params.type };
 
   const count = await Post.count(query);
 
@@ -177,13 +246,13 @@ router.get("/:postID", (req, res) => {
 ////////////////////////////////////////////////
 router.put("/:postID", async (req, res) => {
   console.log(req.params.postID);
-  const owner = await Post.findOne({
-    attributes: ["ownerId"],
+  const post = await Post.findOne({
     where: { id: req.params.postID },
+    include: Pet,
   });
-  console.log("request", req.user.id, "actual", owner.ownerId);
+  const owner = post.pet.userId;
 
-  if (req.user.id != owner.ownerId)
+  if (req.user.id != owner)
     return res.status(401).json({ msg: "You are not the owner of the post" });
 
   const postEntry = {

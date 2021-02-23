@@ -2,9 +2,7 @@
 const router = require("express").Router();
 
 //database
-const Subscriptions = require("../db").sequelize.import(
-  "../models/subscriptions.js"
-);
+const Subscriptions = require("../db").subscriptions;
 
 ////////////////////////////////////////////////
 // GET SUBSCRIBERS
@@ -59,7 +57,7 @@ router.post("/:petID", async (req, res) => {
     if (isSubed)
       return res
         .status(200)
-        .json({ numSub: numSub, userSubed: true, msg: "Already Subscribed" }); // already liked exit function
+        .json({ numSub: numSub, userSub: true, msg: "Already Subscribed" }); // already liked exit function
 
     await Subscriptions.create(createQuery);
 

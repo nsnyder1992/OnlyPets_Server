@@ -1,14 +1,21 @@
 const express = require("express");
 const router = express.Router();
+const Sequelize = require("../db").Sequelize;
 const sequelize = require("../db").sequelize;
 const { route } = require("./user-controller");
-const Pet = sequelize.import("../models/pet.js");
+const Pet = require("../db").pet;
+const User = require("../db").user;
 
 ////////////////////////////////////////////////
 // GET ALL PETS
 ////////////////////////////////////////////////
 router.get("/", (req, res) => {
-  Pet.findAll()
+  Pet.findAll({
+    include: {
+      model: User,
+      attributes: ["id", "username"],
+    },
+  })
     .then((pets) => {
       if (pets.length === 0)
         return res.status(200).json({ message: "No pets found!" });
@@ -23,7 +30,13 @@ router.get("/", (req, res) => {
 // GET ALL PETS BY OWNER
 ////////////////////////////////////////////////
 router.get("/owned", (req, res) => {
-  Pet.findAll({ where: { ownerId: req.user.id } })
+  Pet.findAll({
+    include: {
+      model: User,
+      attributes: ["id", "username"],
+    },
+    where: { userId: req.user.id },
+  })
     .then((pets) => {
       if (pets.length === 0)
         return res.status(200).json({ message: "No pets found!" });
@@ -38,7 +51,13 @@ router.get("/owned", (req, res) => {
 // GET PET BY ID
 ////////////////////////////////////////////////
 router.get("/:id", (req, res) => {
-  Pet.findOne({ where: { id: req.params.id } })
+  Pet.findOne({
+    where: { id: req.params.id },
+    include: {
+      model: User,
+      attributes: ["id", "username"],
+    },
+  })
     .then((pet) => {
       if (pet.length === 0)
         return res.status(200).json({ message: "No pets found!" });
@@ -53,7 +72,13 @@ router.get("/:id", (req, res) => {
 // GET PET BY TYPE
 ////////////////////////////////////////////////
 router.get("/type/:type", (req, res) => {
-  Pet.findAll({ where: { type: req.params.type } })
+  Pet.findAll({
+    where: { type: req.params.type },
+    include: {
+      model: User,
+      attributes: ["id", "username"],
+    },
+  })
     .then((pets) => {
       if (pets.length === 0)
         return res.status(200).json({ message: "No pets found!" });
@@ -73,7 +98,7 @@ router.post("/create", (req, res) => {
     type: req.body.pet.type,
     description: req.body.pet.description,
     moneyToSubscribe: req.body.pet.moneyToSubscribe,
-    ownerId: req.user.id,
+    userId: req.user.id,
   })
     .then((pet) => {
       res.status(200).json(pet);
