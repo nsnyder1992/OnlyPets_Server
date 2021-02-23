@@ -5,12 +5,20 @@ const sequelize = require("../db").sequelize;
 const { route } = require("./user-controller");
 const Pet = require("../db").pet;
 const User = require("../db").user;
+const Subscriptions = require("../db").subscriptions;
 
 ////////////////////////////////////////////////
 // GET ALL PETS
 ////////////////////////////////////////////////
-router.get("/", (req, res) => {
+router.get("/:page/:limit", async (req, res) => {
+  const limit = req.params.limit;
+  const offset = (req.params.page - 1) * limit;
+
+  const count = await Pet.count();
+
   Pet.findAll({
+    limit: limit,
+    offset: offset,
     include: {
       model: User,
       attributes: ["id", "username"],
@@ -19,7 +27,7 @@ router.get("/", (req, res) => {
     .then((pets) => {
       if (pets.length === 0)
         return res.status(200).json({ message: "No pets found!" });
-      res.status(200).json({ pets });
+      res.status(200).json({ pets, count });
     })
     .catch((error) => {
       res.status(500).json({ error });
@@ -29,8 +37,17 @@ router.get("/", (req, res) => {
 ////////////////////////////////////////////////
 // GET ALL PETS BY OWNER
 ////////////////////////////////////////////////
-router.get("/owned", (req, res) => {
+router.get("/owned/:page/:limit", async (req, res) => {
+  const limit = req.params.limit;
+  const offset = (req.params.page - 1) * limit;
+
+  const count = await Pet.count({
+    where: { userId: req.user.id },
+  });
+
   Pet.findAll({
+    limit: limit,
+    offset: offset,
     include: {
       model: User,
       attributes: ["id", "username"],
@@ -40,7 +57,7 @@ router.get("/owned", (req, res) => {
     .then((pets) => {
       if (pets.length === 0)
         return res.status(200).json({ message: "No pets found!" });
-      res.status(200).json({ pets });
+      res.status(200).json({ pets, count });
     })
     .catch((error) => {
       res.status(500).json({ error });
@@ -71,8 +88,15 @@ router.get("/:id", (req, res) => {
 ////////////////////////////////////////////////
 // GET PET BY TYPE
 ////////////////////////////////////////////////
-router.get("/type/:type", (req, res) => {
+router.get("/type/:type/:page/:limit", async (req, res) => {
+  const limit = req.params.limit;
+  const offset = (req.params.page - 1) * limit;
+
+  const count = await Pet.count({ where: { type: req.params.type } });
+
   Pet.findAll({
+    limit: limit,
+    offset: offset,
     where: { type: req.params.type },
     include: {
       model: User,
@@ -82,7 +106,7 @@ router.get("/type/:type", (req, res) => {
     .then((pets) => {
       if (pets.length === 0)
         return res.status(200).json({ message: "No pets found!" });
-      res.status(200).json({ pets });
+      res.status(200).json({ pets, count });
     })
     .catch((error) => {
       res.status(500).json({ error });
@@ -101,6 +125,12 @@ router.post("/create", (req, res) => {
     userId: req.user.id,
   })
     .then((pet) => {
+      //subscribe to the pets that the users own on Pet creation
+      Subscriptions.create({
+        petId: pet.id,
+        userId: req.user.id,
+      }).catch((err) => res.status(500).json(err));
+      //return pet
       res.status(200).json(pet);
     })
     .catch((error) => {

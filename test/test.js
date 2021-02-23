@@ -140,7 +140,7 @@ const createPosts = async () => {
     let pet = pets[Math.floor(Math.random() * pets.length)];
     console.log(pet);
     let petId = pet.id;
-    let ownerId = pet.ownerId;
+    let ownerId = pet.userId;
     let petType = pet.type;
 
     //signIn as ownerId
@@ -215,7 +215,7 @@ const createPosts = async () => {
 };
 
 const setupDB = async () => {
-  await createUsersPets();
+  // await createUsersPets();
   await createPosts();
   console.log("DONE!!!");
 };

@@ -95,6 +95,7 @@ router.post("/", (req, res) => {
 router.get("/:page/:limit", async (req, res) => {
   const limit = req.params.limit;
   const offset = (req.params.page - 1) * limit;
+
   const query = {
     limit: limit,
     offset: offset,
@@ -115,9 +116,14 @@ router.get("/:page/:limit", async (req, res) => {
 ////////////////////////////////////////////////
 // GET ALL LIKED
 ////////////////////////////////////////////////
-router.get("/liked", async (req, res) => {
+router.get("/liked/:page/:limit", async (req, res) => {
+  const limit = req.params.limit;
+  const offset = (req.params.page - 1) * limit;
+
   try {
     const posts = await Post.findAll({
+      limit: limit,
+      offset: offset,
       include: [
         {
           model: User,
