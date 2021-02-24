@@ -23,7 +23,7 @@ cloudinary.config({
 // CLOUDINARY POST SIGNATURE
 ////////////////////////////////////////////////
 router.get("/cloudinary/:publicId", (req, res) => {
-  //constants
+  //required constants by cloudinary api
   const timestamp = Math.round(new Date().getTime() / 1000);
   const public_id = `id-${timestamp}-${req.params.publicId}`;
   const folder = "onlyPets";
@@ -34,8 +34,10 @@ router.get("/cloudinary/:publicId", (req, res) => {
     public_id: public_id,
   };
 
+  //get signature to return to client
   const sig = cloudinary.utils.api_sign_request(params_to_sign, apiSecret);
 
+  //return all parameters
   res.status(200).json({
     signature: sig,
     timestamp: timestamp,
@@ -46,7 +48,7 @@ router.get("/cloudinary/:publicId", (req, res) => {
 });
 
 ////////////////////////////////////////////////
-// CLOUDINARY DELETE SIGNATURE
+// CLOUDINARY DELETE SIGNATURE (NOT WORKING)
 ////////////////////////////////////////////////
 router.get("/cloudinary/delete/:folder/:publicId", (req, res) => {
   //constants
@@ -90,20 +92,25 @@ router.post("/", (req, res) => {
 });
 
 ////////////////////////////////////////////////
-// GET POSTS
+// GET POSTS (PAGINATED)
 ////////////////////////////////////////////////
 router.get("/:page/:limit", async (req, res) => {
+  //setup pagination constants
   const limit = req.params.limit;
   const offset = (req.params.page - 1) * limit;
 
+  //get posts from pagination and createdAt Descending order
+  //most recent posts will be sent first
   const query = {
     limit: limit,
     offset: offset,
     order: [["createdAt", "DESC"]],
   };
 
+  //get total number of posts
   const count = await Post.count();
 
+  //get posts and return them with count
   Post.findAll(query)
     .then((posts) => {
       const restRes = { posts: posts, total: count };
@@ -114,15 +121,17 @@ router.get("/:page/:limit", async (req, res) => {
 });
 
 ////////////////////////////////////////////////
-// GET ALL LIKED
+// GET ALL LIKED BY PET TYPE (PAGINATED)
 ////////////////////////////////////////////////
 router.get("/liked/:type/:page/:limit", async (req, res) => {
+  //setup pagination parameters and pet type
   const limit = req.params.limit;
   const offset = (req.params.page - 1) * limit;
   const type = req.params.type;
 
   try {
     //find liked query without pagination and pet type
+    //these will be added later
     const query = {
       order: [["createdAt", "DESC"]],
       include: [
@@ -156,9 +165,10 @@ router.get("/liked/:type/:page/:limit", async (req, res) => {
 });
 
 ////////////////////////////////////////////////
-// GET ALL SUBSCRIBED
+// GET ALL SUBSCRIBED BY PET TYPE (PAGINATED)
 ////////////////////////////////////////////////
 router.get("/subscribed/:type/:page/:limit", async (req, res) => {
+  //setup pagination parameters and pet type
   const limit = req.params.limit;
   const offset = (req.params.page - 1) * limit;
   const type = req.params.type;
@@ -176,6 +186,7 @@ router.get("/subscribed/:type/:page/:limit", async (req, res) => {
     for (pet of subscribed) subPetIds.push(pet.petId);
 
     //query without pagination and pet type
+    //these will be added later
     const query = {
       order: [["createdAt", "DESC"]],
       where: { petId: subPetIds },
@@ -187,9 +198,11 @@ router.get("/subscribed/:type/:page/:limit", async (req, res) => {
         },
       },
     };
+
     //set pet type to req type if not set to all
     if (type !== "all") query.include.where = { type: req.params.type };
 
+    //get count without pagination parameters
     const count = await Post.count(query);
 
     //add paginated query params to query
@@ -207,15 +220,15 @@ router.get("/subscribed/:type/:page/:limit", async (req, res) => {
 });
 
 ////////////////////////////////////////////////
-// GET POSTS BY PET TYPE
+// GET POSTS BY PET TYPE (PAGINATED)
 ////////////////////////////////////////////////
 router.get("/byPetType/:type/:page/:limit", async (req, res) => {
+  //setup pagination parameters
   const limit = req.params.limit;
   const offset = (req.params.page - 1) * limit;
 
+  //get Pets and the owners information
   const query = {
-    limit: limit,
-    offset: offset,
     order: [["createdAt", "DESC"]],
     include: {
       model: Pet,
@@ -226,14 +239,20 @@ router.get("/byPetType/:type/:page/:limit", async (req, res) => {
     },
   };
 
+  //if not requested type not "all" add type to query
   if (req.params.type !== "all")
     query.include.where = { type: req.params.type };
 
+  //get current count without pagination parameters
   const count = await Post.count(query);
 
+  //add pagination parameters
+  query.limit = limit;
+  query.offset = offset;
+
+  //get pets and return them with count
   try {
     const posts = await Post.findAll(query);
-    // const postPets = await Post.getPet();
     const restRes = { posts: posts, total: count };
     res.status(200).json(restRes);
   } catch (err) {
@@ -242,11 +261,13 @@ router.get("/byPetType/:type/:page/:limit", async (req, res) => {
 });
 
 ////////////////////////////////////////////////
-// GET POSTS BY PET
+// GET POSTS BY PET (PAGINATED)
 ////////////////////////////////////////////////
 router.get("/byPet/:petID/:page/:limit", async (req, res) => {
+  //setup pagination constants
   const limit = req.params.limit;
   const offset = (req.params.page - 1) * limit;
+
   const query = {
     where: { petId: req.params.petID },
     limit: limit,
@@ -254,8 +275,10 @@ router.get("/byPet/:petID/:page/:limit", async (req, res) => {
     order: [["createdAt", "DESC"]],
   };
 
+  //get all pet posts
   const count = await Post.count({ where: { petId: req.params.petID } });
 
+  //get posts by pet and return them with total count
   Post.findAll(query)
     .then((posts) => {
       const restRes = { posts: posts, total: count };
@@ -268,7 +291,7 @@ router.get("/byPet/:petID/:page/:limit", async (req, res) => {
 });
 
 ////////////////////////////////////////////////
-// GET POST
+// GET POST BY ID
 ////////////////////////////////////////////////
 router.get("/:postID", (req, res) => {
   Post.findOne({ where: { id: req.params.postID } })
@@ -280,13 +303,14 @@ router.get("/:postID", (req, res) => {
 // UPDATE POST
 ////////////////////////////////////////////////
 router.put("/:postID", async (req, res) => {
-  console.log(req.params.postID);
+  //find Post and include Pet to get owner id
   const post = await Post.findOne({
     where: { id: req.params.postID },
     include: Pet,
   });
   const owner = post.pet.userId;
 
+  //if not the owner of the pet return not Authorized
   if (req.user.id != owner)
     return res.status(401).json({ msg: "You are not the owner of the post" });
 
@@ -298,6 +322,7 @@ router.put("/:postID", async (req, res) => {
 
   const query = { where: { id: req.params.postID } };
 
+  //update Post
   Post.update(postEntry, query)
     .then((post) => res.status(200).json(post))
     .catch((err) => res.status(500).json({ error: err }));
@@ -307,6 +332,17 @@ router.put("/:postID", async (req, res) => {
 //DELETE POST
 ///////////////////////////////////////////////////////////////
 router.delete("/:postID", async (req, res) => {
+  //find Post and include Pet to get owner id
+  const post = await Post.findOne({
+    where: { id: req.params.postID },
+    include: Pet,
+  });
+  const owner = post.pet.userId;
+
+  //if not the owner of the pet return not Authorized
+  if (req.user.id != owner)
+    return res.status(401).json({ msg: "You are not the owner of the post" });
+
   const query = { where: { id: req.params.postID } };
 
   Post.destroy(query)

@@ -1,12 +1,14 @@
 require("dotenv");
-let express = require("express");
 const router = require("express").Router();
-const User = require("../db").sequelize.import("../models/user.js");
+const User = require("../db").user;
 const jwt = require("jsonwebtoken");
 let bcrypt = require("bcrypt");
 
 const validateSession = require("../middleware/validate-session");
 
+////////////////////////////////////////////////
+// CREATE USER
+////////////////////////////////////////////////
 router.post("/create", function (req, res) {
   User.create({
     username: req.body.user.username,
@@ -32,6 +34,9 @@ router.post("/create", function (req, res) {
     });
 });
 
+////////////////////////////////////////////////
+// LOGIN USER
+////////////////////////////////////////////////
 router.post("/login", function (req, res) {
   User.findOne({
     where: {
@@ -72,6 +77,8 @@ router.post("/login", function (req, res) {
 //////////////////////////////////////////////////////////////////////
 // GET USER BY ID
 //////////////////////////////////////////////////////////////////////
+//We use validateSession here to protect the path of unknown users from
+//getting our users data
 router.get("/byId/:id", validateSession, (req, res) => {
   User.findOne({ where: { id: req.params.id } })
     .then((user) => {
@@ -83,6 +90,9 @@ router.get("/byId/:id", validateSession, (req, res) => {
 //////////////////////////////////////////////////////////////////////
 // GET LOGGED IN USER BY TOKEN
 //////////////////////////////////////////////////////////////////////
+//We use validateSession here to protect the path of unknown users from
+//getting our users data
+//This endpoint gets logged in user data from provided session Token
 router.get("/self", validateSession, (req, res) => {
   User.findOne({ where: { id: req.user.id } })
     .then((user) => {

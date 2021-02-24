@@ -1,21 +1,22 @@
 const express = require("express");
 const router = express.Router();
-const Sequelize = require("../db").Sequelize;
-const sequelize = require("../db").sequelize;
-const { route } = require("./user-controller");
 const Pet = require("../db").pet;
 const User = require("../db").user;
 const Subscriptions = require("../db").subscriptions;
 
 ////////////////////////////////////////////////
-// GET ALL PETS
+// GET ALL PETS (PAGINATED)
 ////////////////////////////////////////////////
 router.get("/:page/:limit", async (req, res) => {
+  //set up pagination constants
   const limit = req.params.limit;
   const offset = (req.params.page - 1) * limit;
 
+  //get total number of pets
   const count = await Pet.count();
 
+  //get pets and returns them with owner information and count
+  //this is based off of the pagination constants
   Pet.findAll({
     limit: limit,
     offset: offset,
@@ -35,13 +36,15 @@ router.get("/:page/:limit", async (req, res) => {
 });
 
 ////////////////////////////////////////////////
-// GET ALL PETS BY OWNER
+// GET ALL PETS BY OWNER (NOT PAGINATED)
 ////////////////////////////////////////////////
 router.get("/owned", async (req, res) => {
+  //get total number of owned pets by the user
   const count = await Pet.count({
     where: { userId: req.user.id },
   });
 
+  //get pets and return them with owner information and count
   Pet.findAll({
     include: {
       model: User,
@@ -63,13 +66,17 @@ router.get("/owned", async (req, res) => {
 // GET ALL PETS BY OWNER (PAGINATED)
 ////////////////////////////////////////////////
 router.get("/owned/:page/:limit", async (req, res) => {
+  //set up pagination constants
   const limit = req.params.limit;
   const offset = (req.params.page - 1) * limit;
 
+  //get total number of owned pets by the user
   const count = await Pet.count({
     where: { userId: req.user.id },
   });
 
+  //get pets and returns them with owner information and count
+  //this is based off of the pagination constants
   Pet.findAll({
     limit: limit,
     offset: offset,
@@ -93,6 +100,7 @@ router.get("/owned/:page/:limit", async (req, res) => {
 // GET PET BY ID
 ////////////////////////////////////////////////
 router.get("/:id", (req, res) => {
+  //get pet by id and return it with Owner information
   Pet.findOne({
     where: { id: req.params.id },
     include: {
@@ -111,14 +119,19 @@ router.get("/:id", (req, res) => {
 });
 
 ////////////////////////////////////////////////
-// GET PET BY TYPE
+// GET PET BY TYPE  (PAGINATED)
 ////////////////////////////////////////////////
 router.get("/type/:type/:page/:limit", async (req, res) => {
+  //setup pagination constants
   const limit = req.params.limit;
   const offset = (req.params.page - 1) * limit;
 
+  //get current count of Pets of type: requested type
   const count = await Pet.count({ where: { type: req.params.type } });
 
+  //get pets of type: requested type and returns them
+  //with owner information and count
+  //this is based off of the pagination constants
   Pet.findAll({
     limit: limit,
     offset: offset,
@@ -150,7 +163,7 @@ router.post("/create", (req, res) => {
     userId: req.user.id,
   })
     .then((pet) => {
-      //subscribe to the pets that the users own on Pet creation
+      //owner subscribes to the pets on Pet creation
       Subscriptions.create({
         petId: pet.id,
         userId: req.user.id,
@@ -167,7 +180,7 @@ router.post("/create", (req, res) => {
 // DELETE PET BY ID
 ////////////////////////////////////////////////
 router.delete("/:id", (req, res) => {
-  Pet.destroy({ where: { id: req.params.id } }) //userId: req.user.id
+  Pet.destroy({ where: { id: req.params.id, userId: req.user.id } })
     .then((response) => {
       res.status(200).json({
         message: "Successfully deleted pet!",
@@ -184,7 +197,7 @@ router.delete("/:id", (req, res) => {
 ////////////////////////////////////////////////
 router.put("/:id", (req, res) => {
   Pet.update(req.body, {
-    where: { id: req.params.id },
+    where: { id: req.params.id, userId: req.user.id },
   })
     .then((response) => {
       res.status(200).json({ message: "Updated Successfully", response });

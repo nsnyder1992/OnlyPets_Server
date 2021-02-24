@@ -1,11 +1,13 @@
 const Sequelize = require("sequelize");
 const { DataTypes } = require("sequelize");
 
+//create Sequelize instance and connect to only-pets db table
 const sequelize = new Sequelize("only-pets", "postgres", "password", {
   host: "localhost",
   dialect: "postgres",
 });
 
+//authenticate() sequelize
 sequelize
   .authenticate()
   .then(() => {
@@ -15,18 +17,21 @@ sequelize
     console.error("Unable to connect to the database", err);
   });
 
+//init db as an empty object to store all db related models/objects/functions
 const db = {};
 
+//main instances
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
-//tables
+//models
 db.user = sequelize.import("./models/user");
 db.pet = sequelize.import("./models/pet");
 db.post = sequelize.import("./models/post");
 
-//through tables
+//through tables for associations later
 db.likes = sequelize.define("likes", {
+  //Users like posts
   postId: {
     type: DataTypes.INTEGER,
     references: {
@@ -44,6 +49,7 @@ db.likes = sequelize.define("likes", {
 });
 
 db.subscriptions = sequelize.define("subscriptions", {
+  //users follow pets
   petId: {
     type: DataTypes.INTEGER,
     references: {
@@ -61,6 +67,8 @@ db.subscriptions = sequelize.define("subscriptions", {
 });
 
 //associations
+//For a better understanding of relationships go to:
+//https://database.guide/the-3-types-of-relationships-in-database-design/
 const createAssoc = async () => {
   //user owns pets
   await db.user.hasMany(db.pet);
@@ -70,18 +78,19 @@ const createAssoc = async () => {
   await db.pet.hasMany(db.post);
   await db.post.belongsTo(db.pet);
 
-  //user likes posts
+  //users likes posts
   await db.user.belongsToMany(db.post, { through: db.likes });
   await db.post.belongsToMany(db.user, { through: db.likes });
 
-  //user subscribes to pet
+  //users subscribes to pets
   await db.user.belongsToMany(db.pet, { through: db.subscriptions });
   await db.pet.belongsToMany(db.user, { through: db.subscriptions });
 };
 
+//add createAssoc function to db object
 db.createAssoc = createAssoc;
 
-//sync
+//sync tables in order to make sure associations do not fail
 const syncDB = async () => {
   //tables
   await db.user.sync();
@@ -90,10 +99,11 @@ const syncDB = async () => {
   await db.likes.sync();
   await db.subscriptions.sync();
 
-  //the rest
+  //the rest of the table
   await db.sequelize.sync();
 };
 
+//add syncDB function to db object
 db.sync = syncDB;
 
 module.exports = db;

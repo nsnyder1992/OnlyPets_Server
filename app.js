@@ -7,8 +7,8 @@ const app = express();
 
 //database
 const db = require("./db");
-db.createAssoc();
-db.sync();
+db.createAssoc(); //create associations
+db.sync(); //sync each table in order
 
 //controllers
 const user = require("./controllers/user-controller");
