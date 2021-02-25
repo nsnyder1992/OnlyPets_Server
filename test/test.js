@@ -127,7 +127,7 @@ const createPosts = async () => {
   })
     .then((res) => res.json())
     .then((json) => {
-      console.log(json.pets);
+      console.log(json);
       pets = json.pets;
     })
     .catch((err) => console.log(err));
@@ -135,7 +135,7 @@ const createPosts = async () => {
   //get post descriptions from external api
   const resDesc = await fetch("https://jsonplaceholder.typicode.com/posts");
   const posts = await resDesc.json();
-
+  console.log(pets);
   for (let i = 0; i < 70; i++) {
     let pet = pets[Math.floor(Math.random() * pets.length)];
     console.log(pet);
@@ -194,7 +194,7 @@ const createPosts = async () => {
     const description = posts[Math.floor(Math.random() * posts.length)].body;
 
     await fetch(baseUrl + "/post/", {
-      method: "Post",
+      method: "POST",
       body: JSON.stringify({
         photoUrl: cloudinaryJson.url,
         description: description,

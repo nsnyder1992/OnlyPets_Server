@@ -7,6 +7,31 @@ const Subscriptions = require("../db").subscriptions;
 ////////////////////////////////////////////////
 // GET ALL PETS (PAGINATED)
 ////////////////////////////////////////////////
+router.get("/", async (req, res) => {
+  //get total number of pets
+  const count = await Pet.count();
+
+  //get pets and returns them with owner information and count
+  //this is based off of the pagination constants
+  Pet.findAll({
+    include: {
+      model: User,
+      attributes: ["id", "username"],
+    },
+  })
+    .then((pets) => {
+      if (pets.length === 0)
+        return res.status(200).json({ message: "No pets found!" });
+      res.status(200).json({ pets, count });
+    })
+    .catch((error) => {
+      res.status(500).json({ error });
+    });
+});
+
+////////////////////////////////////////////////
+// GET ALL PETS (PAGINATED)
+////////////////////////////////////////////////
 router.get("/:page/:limit", async (req, res) => {
   //set up pagination constants
   const limit = req.params.limit;
