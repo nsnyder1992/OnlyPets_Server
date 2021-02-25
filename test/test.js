@@ -19,7 +19,7 @@ const createUsersPets = async () => {
   //CREATE USERS
   /////////////////////////////////////////////
   for (let i = 0; i <= 10; i++) {
-    let username = `nick${i}@test.com`;
+    let username = `test${i}@test.com`;
     let password = "password";
     let token;
 
