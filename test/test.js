@@ -215,7 +215,7 @@ const createPosts = async () => {
 };
 
 const setupDB = async () => {
-  // await createUsersPets();
+  await createUsersPets();
   await createPosts();
   console.log("DONE!!!");
 };

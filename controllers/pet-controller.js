@@ -5,7 +5,7 @@ const User = require("../db").user;
 const Subscriptions = require("../db").subscriptions;
 
 ////////////////////////////////////////////////
-// GET ALL PETS (PAGINATED)
+// GET ALL PETS
 ////////////////////////////////////////////////
 router.get("/", async (req, res) => {
   //get total number of pets
