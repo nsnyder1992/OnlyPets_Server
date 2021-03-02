@@ -28,6 +28,8 @@ db.sequelize = sequelize;
 db.user = sequelize.import("./models/user");
 db.pet = sequelize.import("./models/pet");
 db.post = sequelize.import("./models/post");
+db.customer = sequelize.import("./models/stripe-customer");
+db.account = sequelize.import("./models/stripe-account");
 
 //through tables for associations later
 db.likes = sequelize.define("likes", {
@@ -85,6 +87,14 @@ const createAssoc = async () => {
   //users subscribes to pets
   await db.user.belongsToMany(db.pet, { through: db.subscriptions });
   await db.pet.belongsToMany(db.user, { through: db.subscriptions });
+
+  //user has one stripe customer id
+  await db.user.hasOne(db.customer);
+  await db.stripe.belongsTo(db.user);
+
+  //user has one stripe account id
+  await db.user.hasOne(db.account);
+  await db.stripe.belongsTo(db.user);
 };
 
 //add createAssoc function to db object
@@ -98,6 +108,8 @@ const syncDB = async () => {
   await db.post.sync();
   await db.likes.sync();
   await db.subscriptions.sync();
+  await db.customer.sync();
+  await db.account.sync();
 
   //the rest of the table
   await db.sequelize.sync();
