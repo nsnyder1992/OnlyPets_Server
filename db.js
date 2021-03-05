@@ -3,7 +3,11 @@ const { DataTypes } = require("sequelize");
 
 //create Sequelize instance and connect to only-pets db table
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
-  logging: true,
+  dialect: "postgres",
+  protocol: "postgres",
+  dialectOptions: {
+    ssl: true,
+  },
 });
 
 //authenticate() sequelize
