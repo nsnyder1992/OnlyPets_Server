@@ -90,11 +90,11 @@ const createAssoc = async () => {
 
   //user has one stripe customer id
   await db.user.hasOne(db.customer);
-  await db.stripe.belongsTo(db.user);
+  await db.customer.belongsTo(db.user);
 
   //user has one stripe account id
   await db.user.hasOne(db.account);
-  await db.stripe.belongsTo(db.user);
+  await db.account.belongsTo(db.user);
 };
 
 //add createAssoc function to db object

@@ -144,28 +144,33 @@ router.get("/:id", (req, res) => {
 });
 
 ////////////////////////////////////////////////
-// GET PET BY TYPE  (PAGINATED)
+// GET PETS BY TYPE  (PAGINATED)
 ////////////////////////////////////////////////
 router.get("/type/:type/:page/:limit", async (req, res) => {
   //setup pagination constants
   const limit = req.params.limit;
   const offset = (req.params.page - 1) * limit;
+  const type = req.params.type;
 
-  //get current count of Pets of type: requested type
-  const count = await Pet.count({ where: { type: req.params.type } });
-
-  //get pets of type: requested type and returns them
-  //with owner information and count
-  //this is based off of the pagination constants
-  Pet.findAll({
-    limit: limit,
-    offset: offset,
-    where: { type: req.params.type },
+  const query = {
     include: {
       model: User,
       attributes: ["id", "username"],
     },
-  })
+  };
+  //set pet type to req type if not set to all
+  if (type !== "all") query.where = { type: type };
+
+  //get current count of Pets of type: requested type
+  const count = await Pet.count(query);
+
+  query.limit = limit;
+  query.offset = offset;
+
+  //get pets of type: requested type and returns them
+  //with owner information and count
+  //this is based off of the pagination constants
+  Pet.findAll(query)
     .then((pets) => {
       if (pets.length === 0)
         return res.status(200).json({ message: "No pets found!" });

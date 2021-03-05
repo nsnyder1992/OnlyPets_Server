@@ -59,11 +59,11 @@ router.post("/login", function (req, res) {
 
               res.status(200).json({
                 user: user,
-                message: "User successfully created",
+                message: "User successfully Logged in",
                 sessionToken: token,
               });
             } else {
-              res.status(502).send({ error: "Login Failed" });
+              res.status(502).send({ error: "Username or Password Incorrect" });
             }
           }
         );

@@ -19,7 +19,7 @@ const createUsersPets = async () => {
   //CREATE USERS
   /////////////////////////////////////////////
   for (let i = 0; i <= 10; i++) {
-    let username = `test${i}@test.com`;
+    let username = `test1${i}@test.com`;
     let password = "password";
     let token;
 
@@ -40,19 +40,6 @@ const createUsersPets = async () => {
       .catch((err) => {
         return console.log(err);
       });
-
-    let names = [
-      "Fluffy",
-      "Bruce",
-      "John",
-      "Snoopy",
-      "Poka",
-      "JJ",
-      "Nola",
-      "Omega",
-      "JoJo",
-      "Beans",
-    ];
 
     /////////////////////////////////////////////
     //CREATE PETS
