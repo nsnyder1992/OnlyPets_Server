@@ -1,9 +1,9 @@
 const fetch = require("node-fetch");
-const baseUrl = "http://localhost:3001";
+const baseUrl = "http://serene-garden-06415.herokuapp.com";
 const FormData = require("form-data");
 
 //cloudinary
-const signatureUrl = "http://localhost:3001/post/cloudinary";
+const signatureUrl = baseUrl + "/post/cloudinary";
 const cloudinaryUrl =
   "https://api.cloudinary.com/v1_1/nsnyder1992/image/upload";
 

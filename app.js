@@ -17,7 +17,7 @@ const post = require("./controllers/post-controller");
 const like = require("./controllers/like-controller");
 const subscription = require("./controllers/subscription-controller");
 const stripeCustomer = require("./controllers/stripe-customer-controller");
-const stripeAccount = require("./controllers/stripe-Account-controller");
+const stripeAccount = require("./controllers/stripe-account-controller");
 
 //headers
 app.use(require("./middleware/headers"));
