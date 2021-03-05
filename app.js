@@ -50,7 +50,7 @@ app.use("/stripe/customer", stripeCustomer);
 app.use("/stripe/account", stripeAccount);
 
 //app constants
-const port = 3001;
+const port = process.env.PORT || 3001;
 
 app.listen(port, function () {
   console.log(`App is listening on port ${port}`);

@@ -26,7 +26,7 @@ router.get("/cloudinary/:publicId", (req, res) => {
   //required constants by cloudinary api
   const timestamp = Math.round(new Date().getTime() / 1000);
   const public_id = `id-${timestamp}-${req.params.publicId}`;
-  const folder = "onlyPets";
+  const folder = process.env.CLOUDINARY_FOLDER;
 
   const params_to_sign = {
     timestamp: timestamp,
