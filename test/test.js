@@ -1,5 +1,5 @@
 const fetch = require("node-fetch");
-const baseUrl = "http://serene-garden-06415.herokuapp.com";
+const baseUrl = "https://serene-garden-06415.herokuapp.com";
 const FormData = require("form-data");
 
 //cloudinary
